@@ -120,11 +120,13 @@ function modal(title, body, buttons) {
   });
 }
 const confirmBox = (title, text, ok = 'Teruskan', dan = false) => modal(title, `<div>${text}</div>`, [{ label: 'Batal', value: false }, { label: ok, cls: dan ? 'dan' : 'pri', value: true }]);
-function setDirty(v) { dirty = v; const c = $('#dirtyChip'); if (c) { c.hidden = !v; } const b = $('#btnSave'); if (b) b.classList.toggle('pri', v); }
+let asT = null, saving = false, again = false;
+function setDirty(v) { dirty = v; clearTimeout(asT); if (v && W) asT = setTimeout(() => saveClass(true), 1200); const c = $('#dirtyChip'); if (c) { c.hidden = !v; } const b = $('#btnSave'); if (b) b.classList.toggle('pri', v); }
 window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------- Navigasi ---------- */
 async function go(v, arg) {
+  if (dirty && W) { clearTimeout(asT); await saveClass(true); }
   if (dirty && !(await confirmBox('Perubahan belum disimpan', 'Anda ada perubahan yang belum disimpan pada kelas ini. Tinggalkan halaman tanpa menyimpan?', 'Tinggalkan', true))) return;
   setDirty(false); W = null; view = v;
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.go === (v === 'kelas' ? 'home' : v)));
@@ -359,8 +361,8 @@ dlg.addEventListener('click', e => {
   if (e.target.id === 'py') { /* tunjuk semua tahun */ const on = e.target.checked, k = W && W.kelas; if (!k) return; const keep = new Set([...dlg.querySelectorAll('#bl input:checked')].map(i => i.value)); (k.buku_ids || []).forEach(x => keep.add(x));
     $('#bl').innerHTML = S.buku.filter(b => on || b.tahun === k.tahun).map(b => `<label><input type="checkbox" value="${b.id}" ${keep.has(b.id) ? 'checked' : ''}><span>${esc(b.judul)}<br><small>Tahun ${b.tahun}</small></span></label>`).join(''); }
 });
-async function saveClass() {
-  if (!W) return; const btn = $('#btnSave'); btn.disabled = true; btn.textContent = 'Menyimpan…';
+async function saveClass(auto) {
+  if (!W) return; if (saving) { again = true; return; } saving = true; clearTimeout(asT); const btn = $('#btnSave'); btn.disabled = true; btn.textContent = 'Menyimpan…';
   try {
     const ids = new Set((W.kelas.buku_ids || []).filter(i => bukuBy(i)));
     const terima = []; W.murid.forEach(m => ids.forEach(b => { const s = W.terima.get(k2(m.id, b)); if (s) terima.push({ m: m.id, b, s }); }));
@@ -372,11 +374,13 @@ async function saveClass() {
     const old = S.murid.filter(m => m.kelas_id === kid); old.forEach(m => S.buku.forEach(b => S.terima.delete(k2(m.id, b.id))));
     S.murid = S.murid.filter(m => m.kelas_id !== kid).concat(W.murid.map(m => ({ ...m, kelas_id: kid })));
     terima.forEach(t => S.terima.set(k2(t.m, t.b), t.s));
-    setDirty(false);
     const st = stats(W.kelas, W.murid, W.terima);
-    if (st.miss.length) { toast(`Disimpan. ${BELL} <b>${st.miss.length} murid</b> masih belum menerima buku lengkap.`, 'wn', 6000); Snd.chime(); } else toast('Disimpan. Semua murid lengkap ✓', 'ok');
-  } catch (e) { toast('Gagal menyimpan: ' + esc(e.message), 'er', 8000); }
-  btn.disabled = false; btn.textContent = '💾 Simpan';
+    if (auto === true) { dirty = false; const c = $('#dirtyChip'); if (c) c.hidden = true; toast('Disimpan ✓', 'ok', 1500); }
+    else { setDirty(false);
+    if (st.miss.length) { toast(`Disimpan. ${BELL} <b>${st.miss.length} murid</b> masih belum menerima buku lengkap.`, 'wn', 6000); Snd.chime(); } else toast('Disimpan. Semua murid lengkap ✓', 'ok'); }
+  } catch (e) { toast('Gagal menyimpan: ' + esc(e.message) + (auto === true ? ' – cuba lagi sebentar…' : ''), 'er', 8000); if (auto === true) asT = setTimeout(() => saveClass(true), 5000); }
+  saving = false; btn.disabled = false; btn.textContent = '💾 Simpan';
+  if (again) { again = false; saveClass(true); }
 }
 function printClass() {
   const k = W.kelas, ids = (k.buku_ids || []).filter(i => bukuBy(i));
