@@ -383,7 +383,7 @@ function printClass() {
   const ctx = {
     sekolah: (S.cfg.nama_sekolah || '').toUpperCase(), sekolahAsal: S.cfg.nama_sekolah || '', sesi: S.cfg.sesi || '', namaKelas: k.nama, guruKelas: k.guru_kelas, guruBesar: S.cfg.guru_besar,
     titles: ids.map(i => ({ id: i, judul: bukuBy(i).judul })),
-    murid: W.murid.map(m => ({ nama: m.nama, tarikh: m.tarikh_terima, recv: new Set(ids.filter(b => W.terima.get(k2(m.id, b)) === 'T')) }))
+    murid: W.murid.map(m => ({ nama: m.nama, tarikh: m.tarikh_terima, recv: new Set(ids.filter(b => W.terima.get(k2(m.id, b)) === 'T')), tak: new Set(ids.filter(b => W.terima.get(k2(m.id, b)) === 'X')) }))
   };
   const pages = window.SPBT_PRINT.buildPages(ctx), root = $('#printRoot'); root.innerHTML = ''; pages.forEach(p => root.appendChild(p));
   document.body.classList.add('pf'); const end = () => { document.body.classList.remove('pf'); window.removeEventListener('afterprint', end); }; window.addEventListener('afterprint', end);

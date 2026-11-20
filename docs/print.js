@@ -89,6 +89,7 @@
           ov['B' + r0] = { text: m.nama, fz: 8 };
           let n = 0;
           chunk.forEach((b, j) => { if (m.recv.has(b.id)) { ov[colL(3 + j) + r0] = { text: '√', fz: 9 }; n++; tot[j]++; } });
+          chunk.forEach((b, j) => { if (m.tak && m.tak.has(b.id)) ov[colL(3 + j) + r0] = { text: 'O', fz: 9 }; });
           if (n) ov['R' + r0] = { text: String(n), h: 'center' };
           totAll += n;
           if (m.tarikh && n) ov['U' + r0] = { text: fmtDate(m.tarikh), fz: 7 };
