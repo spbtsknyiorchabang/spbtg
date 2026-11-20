@@ -145,7 +145,7 @@ function renderHome(playSound = true) {
   const missM = per.reduce((a, p) => a + p.st.miss.length, 0), missK = per.filter(p => p.st.miss.length).length;
   const withBooks = per.filter(p => p.n && p.st.ids.length);
   const done = withBooks.filter(p => !p.st.miss.length).length;
-  let h = `<h1>Pengagihan Buku Teks ${esc(S.cfg.sesi || '')}</h1><div class="sub">Pilih kelas, kemudian klik petak judul buku bagi murid yang telah menerima buku.</div><div style="margin:10px 0"><button class="btn" id="btnAllX">⬇ Muat turun semua borang (ZIP xlsx)</button></div>`;
+  let h = `<h1>Pengagihan Buku Teks ${esc(S.cfg.sesi || '')}</h1><div class="sub">Pilih kelas, kemudian klik petak judul buku bagi murid yang telah menerima buku.</div><div class="row" style="margin:10px 0;gap:8px;flex-wrap:wrap"><select id="xTahun" style="width:auto"><option value="all">Semua tahun</option>${[1, 2, 3, 4, 5, 6].map(t => `<option value="${t}" ${String(t) === String(xTahun) ? 'selected' : ''}>Tahun ${t}</option>`).join('')}</select><button class="btn" id="btnAllX">⬇ Jana &amp; muat turun borang (ZIP xlsx)</button></div>`;
   h += `<div class="stats"><div class="card stat"><b>${totM}</b><span>Jumlah murid</span></div><div class="card stat"><b>${S.kelas.length}</b><span>Jumlah kelas</span></div>
   <div class="card stat ok"><b>${done}/${withBooks.length}</b><span>Kelas lengkap</span></div><div class="card stat ${missM ? 'wn' : 'ok'}"><b>${missM}</b><span>Murid belum terima buku lengkap</span></div></div>`;
   if (missM) h += `<div class="alertbar" role="alert"><span class="dot"></span><div><b>${missM} murid</b> di <b>${missK} kelas</b> belum menerima semua buku. Buka kelas berkenaan untuk melihat senarai nama dan buku yang kurang. <a href="#" id="lnkRum" style="color:var(--ac);font-weight:600">Lihat rumusan</a></div></div>`;
@@ -167,7 +167,7 @@ function renderHome(playSound = true) {
 $('#main').addEventListener('click', e => {
   const k = e.target.closest('[data-k]'); if (k && view === 'home') return go('kelas', k.dataset.k);
   const a = e.target.closest('[data-addk]'); if (a) return addKelas(+a.dataset.addk);
-  if (e.target.closest('#btnAllX')) { downloadAllXlsx(); return; }
+  if (e.target.id === 'xTahun') return; if (e.target.closest('#btnAllX')) { downloadAllXlsx(); return; }
   if (e.target.id === 'lnkRum') { e.preventDefault(); go('rumusan'); }
 });
 async function addKelas(tahun) {
@@ -397,14 +397,16 @@ async function downloadXlsx() {
   try { toast('Menyediakan borang…', '', 1500); if (dirty) await saveClass(true); const b = await window.SPBT_XLSX.make(formCtx(W.kelas, W.murid, W.terima)); saveBlob(xlsxName(W.kelas), b, XLSX_T); toast('Borang xlsx dimuat turun ✓', 'ok'); }
   catch (e) { console.error(e); toast('Gagal jana borang: ' + esc(e.message), 'er', 8000); }
 }
+let xTahun = 'all';
 async function downloadAllXlsx() {
+  const sel = $('#xTahun'); if (sel) xTahun = sel.value;
   try {
     toast('Menyediakan semua borang…', '', 2500); await loadAll();
     const z = new JSZip(); let n = 0;
-    for (const k of S.kelas) { const ms = muridOf(k.id); if (!ms.length || !(k.buku_ids || []).length) continue; z.file(xlsxName(k), await window.SPBT_XLSX.make(formCtx(k, ms, S.terima))); n++; }
-    if (!n) return toast('Tiada kelas yang ada murid dan judul buku', 'wn');
+    for (const k of S.kelas.filter(k => xTahun === 'all' || k.tahun === +xTahun)) { const ms = muridOf(k.id); if (!ms.length || !(k.buku_ids || []).length) continue; z.file(xlsxName(k), await window.SPBT_XLSX.make(formCtx(k, ms, S.terima))); n++; }
+    if (!n) return toast('Tiada kelas yang ada murid dan judul buku' + (xTahun === 'all' ? '' : ' untuk Tahun ' + xTahun), 'wn');
     const d = new Date(), p = x => String(x).padStart(2, '0');
-    saveBlob(`SPBTG_${S.cfg.sesi || ''}_semua_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.zip`, await z.generateAsync({ type: 'uint8array' }), 'application/zip'); toast(`${n} borang dimuat turun (ZIP) ✓`, 'ok');
+    saveBlob(`SPBTG_${S.cfg.sesi || ''}_${xTahun === 'all' ? 'semua_tahun' : 'Tahun' + xTahun}_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.zip`, await z.generateAsync({ type: 'uint8array' }), 'application/zip'); toast(`${n} borang dimuat turun (ZIP) ✓`, 'ok');
   } catch (e) { console.error(e); toast('Gagal jana borang: ' + esc(e.message), 'er', 8000); }
 }
 function printClass() {
