@@ -419,8 +419,8 @@ function renderRumusan() {
   $('#rt').onchange = e => { rumTahun = e.target.value; renderRumusan(); };
   $('#rprint').onclick = () => { document.body.classList.add('ps'); const end = () => { document.body.classList.remove('ps'); window.removeEventListener('afterprint', end); }; window.addEventListener('afterprint', end); setTimeout(() => window.print(), 60); };
   $('#rcsv').onclick = () => {
-    const rows = [['Tahun', 'Kelas', 'Bil. murid', 'Judul', 'Terima', 'Tidak terlibat', 'Kurang']];
-    S.kelas.filter(k => rumTahun === 'all' || k.tahun === +rumTahun).forEach(k => { const n = muridOf(k.id).length; kelasStats(k).per.forEach(p => { const b = bukuBy(p.id); rows.push([k.tahun, k.nama, n, b.judul, p.terima, p.na, p.kurang]); }); });
+    const rows = [['Tahun', 'Kelas', 'Bil. murid', 'Judul', 'Terima', 'Tak dapat', 'Kurang']];
+    S.kelas.filter(k => rumTahun === 'all' || k.tahun === +rumTahun).forEach(k => { const n = muridOf(k.id).length; kelasStats(k).per.forEach(p => { const b = bukuBy(p.id); rows.push([k.tahun, k.nama, n, b.judul, p.terima, p.tak || 0, p.kurang]); }); });
     const csv = '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `rumusan-buku-kurang-${S.cfg.sesi || ''}.csv`; a.click();
   };
