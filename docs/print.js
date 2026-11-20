@@ -69,7 +69,7 @@
         ov[L.name] = { text: ctx.sekolah, h: 'left' };
         ov[L.tajuk] = { text: si === 0 ? `SKIM PINJAMAN BUKU TEKS ${ctx.sesi}` : `SKIM PINJAMAN BUKU TEKS ${ctx.sesi}` };
         if (si === 0) {
-          ov.A10 = { text: `Kepada Guru Kelas : ${ctx.guruKelas || '…………………………….'}` };
+          ov.A10 = { text: `Kepada Guru Kelas : ${ctx.guruKelas || '…………………………….'}        Nama Kelas : ${ctx.namaKelas || ''}` };
           ov.A13 = { text: `Murid-murid yang disenaraikan namanya di bawah ini adalah diluluskan pinjaman buku teks bagi sesi persekolahan tahun ${ctx.sesi}.` };
           ov.D16 = { text: `Nama: ${ctx.guruBesar || ''}` };
           ov.V16 = { text: `Nama Guru Kelas:  ${ctx.guruKelas || '…………………………………………………………………'}` };
@@ -97,6 +97,7 @@
         });
         chunk.forEach((b, j) => { if (tot[j]) ov[colL(3 + j) + L.total] = { text: String(tot[j]), h: 'center' }; });
         if (totAll) ov['R' + L.total] = { text: String(totAll), h: 'center' };
+        if (ctx.collect) { ctx.collect.push({ si, ov }); if (ctx.specOnly) continue; }
         const sh = buildSheet(si, ov);
         const availW = A4W - (sh.margins.l + sh.margins.r) * PX;
         const scale = Math.min(availW / sh.W, (A4H - (sh.margins.t + sh.margins.b) * PX) / sh.H);

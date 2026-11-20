@@ -145,7 +145,7 @@ function renderHome(playSound = true) {
   const missM = per.reduce((a, p) => a + p.st.miss.length, 0), missK = per.filter(p => p.st.miss.length).length;
   const withBooks = per.filter(p => p.n && p.st.ids.length);
   const done = withBooks.filter(p => !p.st.miss.length).length;
-  let h = `<h1>Pengagihan Buku Teks ${esc(S.cfg.sesi || '')}</h1><div class="sub">Pilih kelas, kemudian klik petak judul buku bagi murid yang telah menerima buku.</div>`;
+  let h = `<h1>Pengagihan Buku Teks ${esc(S.cfg.sesi || '')}</h1><div class="sub">Pilih kelas, kemudian klik petak judul buku bagi murid yang telah menerima buku.</div><div style="margin:10px 0"><button class="btn" id="btnAllX">⬇ Muat turun semua borang (ZIP xlsx)</button></div>`;
   h += `<div class="stats"><div class="card stat"><b>${totM}</b><span>Jumlah murid</span></div><div class="card stat"><b>${S.kelas.length}</b><span>Jumlah kelas</span></div>
   <div class="card stat ok"><b>${done}/${withBooks.length}</b><span>Kelas lengkap</span></div><div class="card stat ${missM ? 'wn' : 'ok'}"><b>${missM}</b><span>Murid belum terima buku lengkap</span></div></div>`;
   if (missM) h += `<div class="alertbar" role="alert"><span class="dot"></span><div><b>${missM} murid</b> di <b>${missK} kelas</b> belum menerima semua buku. Buka kelas berkenaan untuk melihat senarai nama dan buku yang kurang. <a href="#" id="lnkRum" style="color:var(--ac);font-weight:600">Lihat rumusan</a></div></div>`;
@@ -167,6 +167,7 @@ function renderHome(playSound = true) {
 $('#main').addEventListener('click', e => {
   const k = e.target.closest('[data-k]'); if (k && view === 'home') return go('kelas', k.dataset.k);
   const a = e.target.closest('[data-addk]'); if (a) return addKelas(+a.dataset.addk);
+  if (e.target.closest('#btnAllX')) { downloadAllXlsx(); return; }
   if (e.target.id === 'lnkRum') { e.preventDefault(); go('rumusan'); }
 });
 async function addKelas(tahun) {
@@ -204,7 +205,7 @@ function renderClass() {
   const k = W.kelas;
   let h = `<div class="hd"><div><button class="btn sm" id="btnBack">← Semua kelas</button></div><div class="spacer"></div>
   <span class="chip dirty" id="dirtyChip" hidden>● Belum disimpan</span>
-  <button class="btn" id="btnTitles">Pilih judul buku</button><button class="btn" id="btnAdd">+ Tambah murid</button><button class="btn" id="btnPrint">🖨 Cetak</button><button class="btn" id="btnSave">💾 Simpan</button></div>
+  <button class="btn" id="btnTitles">Pilih judul buku</button><button class="btn" id="btnAdd">+ Tambah murid</button><button class="btn" id="btnPrint">🖨 Cetak</button><button class="btn" id="btnXlsx">⬇ Muat turun xlsx</button><button class="btn" id="btnSave">💾 Simpan</button></div>
   <h1>${esc(k.nama)} <button class="ib" id="btnRen" title="Tukar nama kelas">✎</button></h1><div class="sub">Tahun ${k.tahun} · ${W.murid.length} murid · ${(k.buku_ids || []).filter(bukuBy).length} judul buku</div>
   <div class="card meta" style="margin-top:14px"><label class="f">Guru kelas${guruSelect('gk', k.guru_kelas)}</label><label class="f">Penolong guru kelas${guruSelect('gp', k.penolong)}</label>
   <label class="f">Tarikh pengagihan (lalai tarikh murid menerima)<input type="date" id="tg" value="${k.tarikh_agih || ''}"></label></div>
@@ -213,7 +214,7 @@ function renderClass() {
   <div class="tabs" id="tabs"></div><div id="vw"></div>`;
   $('#main').innerHTML = h;
   renderTable(); renderWarn();
-  $('#btnBack').onclick = () => go('home'); $('#btnSave').onclick = saveClass; $('#btnPrint').onclick = printClass;
+  $('#btnBack').onclick = () => go('home'); $('#btnSave').onclick = saveClass; $('#btnPrint').onclick = printClass; $('#btnXlsx').onclick = downloadXlsx;
   $('#btnAdd').onclick = () => editMurid(); $('#btnTitles').onclick = pickTitles; $('#btnRen').onclick = renameKelas;
   [['gk', 'guru_kelas'], ['gp', 'penolong']].forEach(([i, f]) => {
     const sel = $('#' + i);
@@ -381,13 +382,33 @@ async function saveClass(auto) {
   saving = false; btn.disabled = false; btn.textContent = '💾 Simpan';
   if (again) { again = false; saveClass(true); }
 }
-function printClass() {
-  const k = W.kelas, ids = (k.buku_ids || []).filter(i => bukuBy(i));
-  const ctx = {
+function formCtx(k, murid, terima) {
+  const ids = (k.buku_ids || []).filter(i => bukuBy(i));
+  return {
     sekolah: (S.cfg.nama_sekolah || '').toUpperCase(), sekolahAsal: S.cfg.nama_sekolah || '', sesi: S.cfg.sesi || '', namaKelas: k.nama, guruKelas: k.guru_kelas, guruBesar: S.cfg.guru_besar,
     titles: ids.map(i => ({ id: i, judul: bukuBy(i).judul })),
-    murid: W.murid.map(m => ({ nama: m.nama, tarikh: m.tarikh_terima, recv: new Set(ids.filter(b => W.terima.get(k2(m.id, b)) === 'T')), tak: new Set(ids.filter(b => W.terima.get(k2(m.id, b)) === 'X')) }))
+    murid: murid.map(m => ({ nama: m.nama, tarikh: m.tarikh_terima, recv: new Set(ids.filter(b => terima.get(k2(m.id, b)) === 'T')), tak: new Set(ids.filter(b => terima.get(k2(m.id, b)) === 'X')) }))
   };
+}
+const xlsxName = k => `SPBTG_${S.cfg.sesi || ''}_${k.nama.replace(/[^A-Za-z0-9]+/g, '_')}.xlsx`;
+function saveBlob(name, data, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+const XLSX_T = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+async function downloadXlsx() {
+  try { toast('Menyediakan borang…', '', 1500); if (dirty) await saveClass(true); const b = await window.SPBT_XLSX.make(formCtx(W.kelas, W.murid, W.terima)); saveBlob(xlsxName(W.kelas), b, XLSX_T); toast('Borang xlsx dimuat turun ✓', 'ok'); }
+  catch (e) { console.error(e); toast('Gagal jana borang: ' + esc(e.message), 'er', 8000); }
+}
+async function downloadAllXlsx() {
+  try {
+    toast('Menyediakan semua borang…', '', 2500); await loadAll();
+    const z = new JSZip(); let n = 0;
+    for (const k of S.kelas) { const ms = muridOf(k.id); if (!ms.length || !(k.buku_ids || []).length) continue; z.file(xlsxName(k), await window.SPBT_XLSX.make(formCtx(k, ms, S.terima))); n++; }
+    if (!n) return toast('Tiada kelas yang ada murid dan judul buku', 'wn');
+    const d = new Date(), p = x => String(x).padStart(2, '0');
+    saveBlob(`SPBTG_${S.cfg.sesi || ''}_semua_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.zip`, await z.generateAsync({ type: 'uint8array' }), 'application/zip'); toast(`${n} borang dimuat turun (ZIP) ✓`, 'ok');
+  } catch (e) { console.error(e); toast('Gagal jana borang: ' + esc(e.message), 'er', 8000); }
+}
+function printClass() {
+  const ctx = formCtx(W.kelas, W.murid, W.terima);
   const pages = window.SPBT_PRINT.buildPages(ctx), root = $('#printRoot'); root.innerHTML = ''; pages.forEach(p => root.appendChild(p));
   document.body.classList.add('pf'); const end = () => { document.body.classList.remove('pf'); window.removeEventListener('afterprint', end); }; window.addEventListener('afterprint', end);
   setTimeout(() => window.print(), 80);
