@@ -194,7 +194,6 @@ async function openClass(id) {
   W.murid.forEach(m => S.buku.forEach(b => { const s = S.terima.get(k2(m.id, b.id)); if (s) W.terima.set(k2(m.id, b.id), s); }));
   renderClass(); setDirty(false);
   const st = stats(W.kelas, W.murid, W.terima);
-  if (st.miss.length) { Snd.chime(); }
 }
 function guruSelect(id, val) {
   const names = [...new Set([...S.guru.map(g => g.nama), ...(val ? [val] : [])])].sort((a, b) => a.localeCompare(b));
