@@ -331,7 +331,7 @@ async function saveClass() {
 function printClass() {
   const k = W.kelas, ids = (k.buku_ids || []).filter(i => bukuBy(i));
   const ctx = {
-    sekolah: (S.cfg.nama_sekolah || '').toUpperCase(), sesi: S.cfg.sesi || '', namaKelas: k.nama, guruKelas: k.guru_kelas, guruBesar: S.cfg.guru_besar,
+    sekolah: (S.cfg.nama_sekolah || '').toUpperCase(), sekolahAsal: S.cfg.nama_sekolah || '', sesi: S.cfg.sesi || '', namaKelas: k.nama, guruKelas: k.guru_kelas, guruBesar: S.cfg.guru_besar,
     titles: ids.map(i => ({ id: i, judul: bukuBy(i).judul })),
     murid: W.murid.map(m => ({ nama: m.nama, tarikh: m.tarikh_terima, recv: new Set(ids.filter(b => W.terima.get(k2(m.id, b)) === 'T')) }))
   };

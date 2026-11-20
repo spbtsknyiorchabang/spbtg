@@ -72,7 +72,7 @@
           ov.A13 = { text: `Murid-murid yang disenaraikan namanya di bawah ini adalah diluluskan pinjaman buku teks bagi sesi persekolahan tahun ${ctx.sesi}.` };
           ov.D16 = { text: `Nama: ${ctx.guruBesar || ''}` };
           ov.V16 = { text: `Nama Guru Kelas:  ${ctx.guruKelas || '…………………………………………………………………'}` };
-          ov.D17 = { html: 'Jawatan : <s>Pengetua</s>/Guru Besar/<s>Penolong Kanan HEM</s>*' };
+          ov.D17 = { text: `Jawatan : Guru Besar ${(ctx.sekolahAsal || '').replace(/^sekolah kebangsaan/i, 'SK')}` };
           ov.Z47 = { text: `Muka surat ${pageNo}` };
         } else {
           ov.A8 = { text: `Nama Kelas: ${ctx.namaKelas}` };
