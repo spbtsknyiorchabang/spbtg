@@ -121,7 +121,7 @@ function modal(title, body, buttons) {
 }
 const confirmBox = (title, text, ok = 'Teruskan', dan = false) => modal(title, `<div>${text}</div>`, [{ label: 'Batal', value: false }, { label: ok, cls: dan ? 'dan' : 'pri', value: true }]);
 let asT = null, saving = false, again = false;
-function setDirty(v) { dirty = v; clearTimeout(asT); if (v && W) asT = setTimeout(() => saveClass(true), 1200); const c = $('#dirtyChip'); if (c) { c.hidden = !v; } const b = $('#btnSave'); if (b) b.classList.toggle('pri', v); }
+function setDirty(v) { dirty = v; clearTimeout(asT); if (v && W) asT = setTimeout(() => saveClass(true), 1200); const c = $('#dirtyChip'); if (c) { c.hidden = true; } const b = $('#btnSave'); if (b) b.classList.toggle('pri', v); }
 window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------- Navigasi ---------- */
@@ -378,7 +378,7 @@ async function saveClass(auto) {
     if (auto === true) { dirty = false; const c = $('#dirtyChip'); if (c) c.hidden = true; toast('Disimpan ✓', 'ok', 1500); }
     else { setDirty(false);
     if (st.miss.length) { toast(`Disimpan. ${BELL} <b>${st.miss.length} murid</b> masih belum menerima buku lengkap.`, 'wn', 6000); Snd.chime(); } else toast('Disimpan. Semua murid lengkap ✓', 'ok'); }
-  } catch (e) { toast('Gagal menyimpan: ' + esc(e.message) + (auto === true ? ' – cuba lagi sebentar…' : ''), 'er', 8000); if (auto === true) asT = setTimeout(() => saveClass(true), 5000); }
+  } catch (e) { toast('Gagal menyimpan: ' + esc(e.message) + (auto === true ? ' – cuba lagi sebentar…' : ''), 'er', 8000); if (auto === true) { const c = $('#dirtyChip'); if (c) { c.textContent = '● Gagal simpan – cuba semula'; c.hidden = false; } asT = setTimeout(() => saveClass(true), 5000); } }
   saving = false; btn.disabled = false; btn.textContent = '💾 Simpan';
   if (again) { again = false; saveClass(true); }
 }
