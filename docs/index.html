@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ms" data-theme="soft">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SPBT G – Rekod Pinjaman Buku Teks</title>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('spbt_theme')||'soft'}catch(e){}</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">SPBT</div>
+      <div><div class="bt" id="brandTitle">SPBT G</div><div class="bs" id="brandSub"></div></div>
+    </div>
+    <nav id="nav">
+      <button data-go="home" class="on">Kelas</button>
+      <button data-go="rumusan">Rumusan</button>
+      <button data-go="tetapan">Tetapan</button>
+    </nav>
+    <div class="tools">
+      <div class="snd" id="snd">
+        <button class="ic" id="sndMute" title="Senyapkan / hidupkan bunyi" aria-label="Senyap"></button>
+        <div class="seg" id="sndSeg" role="group" aria-label="Kekuatan bunyi">
+          <button data-lv="low">Perlahan</button><button data-lv="mid">Sederhana</button><button data-lv="high">Kuat</button>
+        </div>
+      </div>
+      <div class="seg theme" id="themeSeg" role="group" aria-label="Tema">
+        <button data-th="soft">Lembut</button><button data-th="dark">Gelap</button>
+      </div>
+    </div>
+  </header>
+  <main id="main"><div class="loading">Memuatkan data…</div></main>
+</div>
+<div id="toasts"></div>
+<dialog id="dlg"></dialog>
+<div id="printRoot"></div>
+<script src="config.js"></script>
+<script src="template.js"></script>
+<script src="print.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
