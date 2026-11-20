@@ -83,7 +83,7 @@ tr.miss td.nm{box-shadow:inset 3px 0 0 var(--wn)}
 td.c{width:40px;min-width:40px;height:40px;text-align:center;cursor:pointer;user-select:none;font-size:17px;font-weight:700}
 td.c:hover{background:var(--ac2)}
 td.c.t{background:var(--ok2);color:var(--ok)}
-td.c.x{background:var(--bg2);color:var(--mu)}
+td.c.x{background:var(--wn2);color:var(--wn);font-weight:700}
 td.dt{width:150px;min-width:150px;padding:4px 6px;box-sizing:border-box}thead th.dt{min-width:150px}
 td.dt input{padding:5px 7px;font-size:12.5px}
 td.jm{width:56px;text-align:center;font-weight:700}
@@ -167,7 +167,7 @@ table.frm .vt span{writing-mode:vertical-rl;transform:rotate(180deg);text-align:
 .trow .nm{flex:1;font-weight:600;font-size:15px}
 .trow .box{flex:none;width:32px;height:32px;border-radius:9px;border:2px solid var(--bd);display:grid;place-items:center;font-size:18px;font-weight:700;color:#fff}
 .trow.on{background:var(--ok2);border-color:var(--ok)}.trow.on .box{background:var(--ok);border-color:var(--ok)}
-.trow.na{opacity:.75}.trow.na .box{background:var(--bg2);color:var(--mu);border-color:var(--bd)}
+.trow.na{background:var(--wn2);border-color:var(--wn)}.trow.na .box{background:var(--wn);border-color:var(--wn);color:#fff}
 .trow .xb{flex:none;font:600 12px inherit;font-family:inherit;border:1px solid var(--bd);background:var(--bg2);color:var(--mu);border-radius:8px;padding:6px 10px;cursor:pointer}
 .scard{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
 .scard.open{border-color:var(--ac)}

@@ -62,10 +62,10 @@ function stats(kelas, murid, terima) {
   const ids = (kelas.buku_ids || []).filter(id => bukuBy(id));
   const per = ids.map(id => {
     let t = 0, x = 0; murid.forEach(m => { const s = terima.get(k2(m.id, id)); if (s === 'T') t++; else if (s === 'X') x++; });
-    return { id, terima: t, na: x, kurang: murid.length - t - x };
+    return { id, terima: t, na: 0, tak: x, kurang: murid.length - t };
   });
   const miss = [];
-  murid.forEach(m => { let n = 0; ids.forEach(id => { if (!terima.has(k2(m.id, id))) n++; }); if (n) miss.push({ m, n }); });
+  murid.forEach(m => { let n = 0; ids.forEach(id => { if (terima.get(k2(m.id, id)) !== 'T') n++; }); if (n) miss.push({ m, n }); });
   const slots = murid.length * ids.length, na = per.reduce((a, p) => a + p.na, 0), got = per.reduce((a, p) => a + p.terima, 0);
   const need = slots - na;
   return { ids, per, miss, pct: need > 0 ? Math.round(got * 100 / need) : 0, kurang: per.reduce((a, p) => a + p.kurang, 0) };
@@ -208,7 +208,7 @@ function renderClass() {
   <div class="card meta" style="margin-top:14px"><label class="f">Guru kelas${guruSelect('gk', k.guru_kelas)}</label><label class="f">Penolong guru kelas${guruSelect('gp', k.penolong)}</label>
   <label class="f">Tarikh pengagihan (lalai tarikh murid menerima)<input type="date" id="tg" value="${k.tarikh_agih || ''}"></label></div>
   <div id="warnBox"></div>
-  <div class="legend"><span><b style="background:var(--ok2);color:var(--ok)">✓</b>Sudah terima (klik sekali)</span><span><b style="background:var(--bg2);color:var(--mu)">–</b>Tidak terlibat (klik kali kedua)</span><span><b style="border:1px solid var(--bd)"></b>Belum terima (klik kali ketiga)</span><span>Klik tajuk buku untuk tindakan seluruh lajur · Pemulangan buku diabaikan untuk pengagihan awal tahun</span></div>
+  <div class="legend"><span><b style="background:var(--ok2);color:var(--ok)">✓</b>Terima (klik sekali; klik lagi untuk batal)</span><span><b style="background:var(--wn2);color:var(--wn)">✗</b>Tak dapat (guna butang pada Ikut buku / Ikut murid)</span><span>Klik tajuk buku untuk tindakan seluruh lajur</span></div>
   <div class="tabs" id="tabs"></div><div id="vw"></div>`;
   $('#main').innerHTML = h;
   renderTable(); renderWarn();
@@ -238,7 +238,7 @@ function renderMatrix() {
   const st = stats(W.kelas, W.murid, W.terima), ids = st.ids, missSet = new Set(st.miss.map(x => x.m.id));
   let h = `<table class="t"><thead><tr><th class="no">No</th><th class="nm">Nama murid</th><th class="dt">Tarikh terima</th>${ids.map(id => { const b = bukuBy(id); return `<th class="bk" data-col="${id}" title="${esc(b.judul)}"><div class="vt">${esc(b.judul)}</div></th>`; }).join('')}<th>Jum.</th><th></th></tr></thead><tbody>`;
   W.murid.forEach((m, i) => {
-    let n = 0; const cells = ids.map(id => { const s = W.terima.get(k2(m.id, id)); if (s === 'T') n++; return `<td class="c ${s === 'T' ? 't' : s === 'X' ? 'x' : ''}" data-m="${m.id}" data-b="${id}">${s === 'T' ? '✓' : s === 'X' ? '–' : ''}</td>`; }).join('');
+    let n = 0; const cells = ids.map(id => { const s = W.terima.get(k2(m.id, id)); if (s === 'T') n++; return `<td class="c ${s === 'T' ? 't' : s === 'X' ? 'x' : ''}" data-m="${m.id}" data-b="${id}">${s === 'T' ? '✓' : s === 'X' ? '✗' : ''}</td>`; }).join('');
     h += `<tr data-row="${m.id}" class="${missSet.has(m.id) ? 'miss' : ''}"><td class="no">${i + 1}</td><td class="nm">${esc(m.nama)}<small>${esc(m.jantina)}${m.nota ? ' · ' + esc(m.nota) : ''}</small></td>
     <td class="dt"><input type="date" data-dt="${m.id}" value="${m.tarikh_terima || ''}"></td>${cells}<td class="jm">${n}</td>
     <td class="ac"><button class="ib" data-all="${m.id}" title="Tandakan semua buku diterima">✓ semua</button><button class="ib" data-ed="${m.id}" title="Sunting">✎</button><button class="ib" data-del="${m.id}" title="Buang murid">🗑</button></td></tr>`;
@@ -255,7 +255,7 @@ function setCell(mid, bid, v) {
   setDirty(true);
 }
 function rowHtml(attr, label, no, s, extra) {
-  return `<div class="trow ${s === 'T' ? 'on' : s === 'X' ? 'na' : ''}" ${attr}>${no ? `<span class="no">${no}</span>` : ''}<span class="nm">${label}</span><span class="box">${s === 'T' ? '✓' : s === 'X' ? '–' : ''}</span><button class="xb" ${extra}>${s === 'X' ? 'Buang tanda' : 'Tidak terlibat'}</button></div>`;
+  return `<div class="trow ${s === 'T' ? 'on' : s === 'X' ? 'na' : ''}" ${attr}>${no ? `<span class="no">${no}</span>` : ''}<span class="nm">${label}</span><span class="box">${s === 'T' ? '✓' : s === 'X' ? '✗' : ''}</span><button class="xb" ${extra}>${s === 'X' ? 'Buang tanda' : 'Tak dapat'}</button></div>`;
 }
 function renderTabs() {
   const tb = [['buku', 'Ikut buku'], ['murid', 'Ikut murid'], ['jadual', 'Jadual']];
@@ -304,7 +304,7 @@ $('#main').addEventListener('click', async e => {
   if (c) {
     const key = k2(c.dataset.m, c.dataset.b), s = W.terima.get(key);
     const m = W.murid.find(x => x.id === c.dataset.m);
-    if (!s) { W.terima.set(key, 'T'); if (!m.tarikh_terima) m.tarikh_terima = W.kelas.tarikh_agih || today(); } else if (s === 'T') W.terima.set(key, 'X'); else W.terima.delete(key);
+    if (s !== 'T') { W.terima.set(key, 'T'); if (!m.tarikh_terima) m.tarikh_terima = W.kelas.tarikh_agih || today(); } else W.terima.delete(key);
     setDirty(true); renderTable(); renderWarn(); return;
   }
   const th = e.target.closest('th.bk'); if (th) return colMenu(th, th.dataset.col);
@@ -319,7 +319,7 @@ $('#main').addEventListener('change', e => { const d = e.target.closest('[data-d
 function colMenu(th, bid) {
   document.querySelectorAll('.pop').forEach(p => p.remove());
   const b = bukuBy(bid), r = th.getBoundingClientRect(), p = document.createElement('div'); p.className = 'pop';
-  p.innerHTML = `<div class="h">${esc(b.judul)}</div><button data-a="T">✓ Semua murid terima</button><button data-a="X">– Semua tidak terlibat</button><button data-a="C">Kosongkan lajur</button>`;
+  p.innerHTML = `<div class="h">${esc(b.judul)}</div><button data-a="T">✓ Semua murid terima</button><button data-a="X">✗ Semua tak dapat</button><button data-a="C">Kosongkan lajur</button>`;
   p.style.left = Math.min(r.left, innerWidth - 240) + 'px'; p.style.top = (r.bottom + 4) + 'px'; document.body.appendChild(p);
   const close = () => { p.remove(); document.removeEventListener('pointerdown', off, true); };
   const off = ev => { if (!p.contains(ev.target)) close(); }; setTimeout(() => document.addEventListener('pointerdown', off, true));
