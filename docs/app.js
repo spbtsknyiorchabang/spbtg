@@ -293,7 +293,7 @@ async function editMurid(id) {
 }
 async function pickTitles() {
   const k = W.kelas; let allYears = false;
-  const draw = () => S.buku.filter(b => allYears || b.tahun === k.tahun).map(b => `<label><input type="checkbox" value="${b.id}" ${(k.buku_ids || []).includes(b.id) ? 'checked' : ''}><span>${esc(b.judul)}<br><small>${esc(b.kod)} · Tahun ${b.tahun}</small></span></label>`).join('');
+  const draw = () => S.buku.filter(b => allYears || b.tahun === k.tahun).map(b => `<label><input type="checkbox" value="${b.id}" ${(k.buku_ids || []).includes(b.id) ? 'checked' : ''}><span>${esc(b.judul)}<br><small>Tahun ${b.tahun}</small></span></label>`).join('');
   const sameYear = S.kelas.filter(x => x.tahun === k.tahun && x.id !== k.id).length;
   const r = await modal('Pilih judul buku kelas', `<div class="row"><button class="btn sm" id="pa">Pilih semua</button><button class="btn sm" id="pn">Kosongkan</button><label class="row" style="gap:6px"><input type="checkbox" id="py"> Tunjuk semua tahun</label></div><div class="bl" id="bl">${draw()}</div>
   ${sameYear ? `<label class="row" style="gap:8px"><input type="checkbox" id="ps"> Guna pilihan ini juga untuk ${sameYear} kelas Tahun ${k.tahun} yang lain</label>` : ''}<div class="sub">Lebih 15 judul akan dicetak pada set borang tambahan (setiap set 15 lajur).</div>`,
@@ -307,7 +307,7 @@ async function pickTitles() {
 dlg.addEventListener('click', e => {
   if (e.target.id === 'pa' || e.target.id === 'pn') { dlg.querySelectorAll('#bl input').forEach(i => i.checked = e.target.id === 'pa'); }
   if (e.target.id === 'py') { /* tunjuk semua tahun */ const on = e.target.checked, k = W && W.kelas; if (!k) return; const keep = new Set([...dlg.querySelectorAll('#bl input:checked')].map(i => i.value)); (k.buku_ids || []).forEach(x => keep.add(x));
-    $('#bl').innerHTML = S.buku.filter(b => on || b.tahun === k.tahun).map(b => `<label><input type="checkbox" value="${b.id}" ${keep.has(b.id) ? 'checked' : ''}><span>${esc(b.judul)}<br><small>${esc(b.kod)} · Tahun ${b.tahun}</small></span></label>`).join(''); }
+    $('#bl').innerHTML = S.buku.filter(b => on || b.tahun === k.tahun).map(b => `<label><input type="checkbox" value="${b.id}" ${keep.has(b.id) ? 'checked' : ''}><span>${esc(b.judul)}<br><small>Tahun ${b.tahun}</small></span></label>`).join(''); }
 });
 async function saveClass() {
   if (!W) return; const btn = $('#btnSave'); btn.disabled = true; btn.textContent = 'Menyimpan…';
@@ -356,21 +356,21 @@ function renderRumusan() {
     const bids = [...new Set(st.flatMap(x => x.s.ids))].sort((a, b) => S.buku.findIndex(x => x.id === a) - S.buku.findIndex(x => x.id === b));
     if (!bids.length) return; any = true;
     const hasOrder = bids.some(b => bukuBy(b).pesanan != null);
-    h += `<div class="card sect"><h2>Tahun ${t}</h2><div style="overflow:auto"><table class="g"><thead><tr><th>Judul buku</th><th>Kod</th>${st.map(x => `<th class="n">${esc(x.k.nama)}<br><span style="font-weight:400">${x.n} murid</span></th>`).join('')}<th class="n">Jumlah kurang</th>${hasOrder ? '<th class="n">Pesanan BTB</th>' : ''}</tr></thead><tbody>`;
+    h += `<div class="card sect"><h2>Tahun ${t}</h2><div style="overflow:auto"><table class="g"><thead><tr><th>Judul buku</th>${st.map(x => `<th class="n">${esc(x.k.nama)}<br><span style="font-weight:400">${x.n} murid</span></th>`).join('')}<th class="n">Jumlah kurang</th>${hasOrder ? '<th class="n">Pesanan BTB</th>' : ''}</tr></thead><tbody>`;
     const colTot = st.map(() => 0); let gt = 0;
     bids.forEach(b => {
       const bk = bukuBy(b); let rt = 0;
-      h += `<tr><td>${esc(bk.judul)}</td><td>${esc(bk.kod)}</td>${st.map((x, i) => { const p = x.s.per.find(q => q.id === b); if (!p || !x.n) return `<td class="n" style="color:var(--mu)">–</td>`; rt += p.kurang; colTot[i] += p.kurang; return `<td class="n kr ${p.kurang ? 'pos' : 'zero'}">${p.kurang}</td>`; }).join('')}<td class="n kr ${rt ? 'pos' : 'zero'}">${rt}</td>${hasOrder ? `<td class="n">${bk.pesanan ?? ''}</td>` : ''}</tr>`; gt += rt;
+      h += `<tr><td>${esc(bk.judul)}</td>${st.map((x, i) => { const p = x.s.per.find(q => q.id === b); if (!p || !x.n) return `<td class="n" style="color:var(--mu)">–</td>`; rt += p.kurang; colTot[i] += p.kurang; return `<td class="n kr ${p.kurang ? 'pos' : 'zero'}">${p.kurang}</td>`; }).join('')}<td class="n kr ${rt ? 'pos' : 'zero'}">${rt}</td>${hasOrder ? `<td class="n">${bk.pesanan ?? ''}</td>` : ''}</tr>`; gt += rt;
     });
-    h += `</tbody><tfoot><tr><th colspan="2" style="text-align:right">Jumlah kurang</th>${colTot.map(c => `<th class="n">${c}</th>`).join('')}<th class="n">${gt}</th>${hasOrder ? '<th></th>' : ''}</tr></tfoot></table></div></div>`;
+    h += `</tbody><tfoot><tr><th style="text-align:right">Jumlah kurang</th>${colTot.map(c => `<th class="n">${c}</th>`).join('')}<th class="n">${gt}</th>${hasOrder ? '<th></th>' : ''}</tr></tfoot></table></div></div>`;
   });
   if (!any) h += `<div class="card sect sub">Tiada data untuk dipaparkan.</div>`;
   $('#main').innerHTML = h;
   $('#rt').onchange = e => { rumTahun = e.target.value; renderRumusan(); };
   $('#rprint').onclick = () => { document.body.classList.add('ps'); const end = () => { document.body.classList.remove('ps'); window.removeEventListener('afterprint', end); }; window.addEventListener('afterprint', end); setTimeout(() => window.print(), 60); };
   $('#rcsv').onclick = () => {
-    const rows = [['Tahun', 'Kelas', 'Bil. murid', 'Kod buku', 'Judul', 'Terima', 'Tidak terlibat', 'Kurang']];
-    S.kelas.filter(k => rumTahun === 'all' || k.tahun === +rumTahun).forEach(k => { const n = muridOf(k.id).length; kelasStats(k).per.forEach(p => { const b = bukuBy(p.id); rows.push([k.tahun, k.nama, n, b.kod, b.judul, p.terima, p.na, p.kurang]); }); });
+    const rows = [['Tahun', 'Kelas', 'Bil. murid', 'Judul', 'Terima', 'Tidak terlibat', 'Kurang']];
+    S.kelas.filter(k => rumTahun === 'all' || k.tahun === +rumTahun).forEach(k => { const n = muridOf(k.id).length; kelasStats(k).per.forEach(p => { const b = bukuBy(p.id); rows.push([k.tahun, k.nama, n, b.judul, p.terima, p.na, p.kurang]); }); });
     const csv = '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `rumusan-buku-kurang-${S.cfg.sesi || ''}.csv`; a.click();
   };
@@ -390,7 +390,7 @@ function renderTetapan() {
   <div class="card sect"><h2>Senarai guru</h2><div class="row" style="margin-bottom:10px"><input type="text" id="ng" placeholder="Nama guru baharu" style="flex:1"><button class="btn" id="ngb">Tambah</button></div>
    <div style="max-height:300px;overflow:auto"><table class="g"><tbody>${S.guru.map(g => `<tr><td>${esc(g.nama)}</td><td style="width:50px"><button class="ib" data-dg="${g.id}" title="Buang">🗑</button></td></tr>`).join('')}</tbody></table></div></div></div>
   <div class="card sect"><h2>Senarai buku</h2><div class="row" style="margin-bottom:12px"><select id="tb" style="width:auto">${[1, 2, 3, 4, 5, 6].map(t => `<option value="${t}" ${t === tBuku ? 'selected' : ''}>Tahun ${t}</option>`).join('')}</select><button class="btn" id="bad">+ Tambah judul</button><button class="btn" id="bim">Tampal senarai</button></div>
-   <div style="overflow:auto"><table class="g"><thead><tr><th>Kod</th><th>Judul</th><th class="n">Pesanan BTB</th><th></th></tr></thead><tbody>${S.buku.filter(b => b.tahun === tBuku).map(b => `<tr><td>${esc(b.kod)}</td><td>${esc(b.judul)}</td><td class="n">${b.pesanan ?? ''}</td><td style="white-space:nowrap"><button class="ib" data-eb="${b.id}">✎</button><button class="ib" data-db="${b.id}">🗑</button></td></tr>`).join('')}</tbody></table></div></div>
+   <div style="overflow:auto"><table class="g"><thead><tr><th>Judul</th><th class="n">Pesanan BTB</th><th></th></tr></thead><tbody>${S.buku.filter(b => b.tahun === tBuku).map(b => `<tr><td>${esc(b.judul)}</td><td class="n">${b.pesanan ?? ''}</td><td style="white-space:nowrap"><button class="ib" data-eb="${b.id}">✎</button><button class="ib" data-db="${b.id}">🗑</button></td></tr>`).join('')}</tbody></table></div></div>
   <div class="card sect"><h2>Kelas</h2><div style="overflow:auto"><table class="g"><tbody>${S.kelas.map(k => `<tr><td>Tahun ${k.tahun}</td><td>${esc(k.nama)}</td><td class="n">${muridOf(k.id).length} murid</td><td style="width:60px"><button class="ib" data-dk="${k.id}" title="Buang kelas">🗑</button></td></tr>`).join('')}</tbody></table></div></div>`;
   $('#main').innerHTML = h;
   $('#tb').onchange = e => { tBuku = +e.target.value; renderTetapan(); };
@@ -407,8 +407,8 @@ $('#main').addEventListener('click', async e => {
 });
 async function editBuku(id) {
   const b = id ? bukuBy(id) : { tahun: tBuku, kod: '', judul: '', pesanan: null };
-  const r = await modal(id ? 'Sunting judul buku' : 'Tambah judul buku', `<label class="f">Kod buku<input type="text" id="bk" value="${esc(b.kod)}"></label><label class="f">Judul<input type="text" id="bj" value="${esc(b.judul)}"></label><label class="f">Jumlah pesanan BTB (jika ada)<input type="number" id="bp" value="${b.pesanan ?? ''}"></label>`,
-    [{ label: 'Batal', value: null }, { label: 'Simpan', cls: 'pri', get: d => { const kod = d.querySelector('#bk').value.trim().toUpperCase(), j = d.querySelector('#bj').value.trim().toUpperCase(); if (!kod || !j) return false; return { kod, judul: j, pesanan: d.querySelector('#bp').value === '' ? null : +d.querySelector('#bp').value }; } }]);
+  const r = await modal(id ? 'Sunting judul buku' : 'Tambah judul buku', `<label class="f">Judul<input type="text" id="bj" value="${esc(b.judul)}"></label><label class="f">Jumlah pesanan BTB (jika ada)<input type="number" id="bp" value="${b.pesanan ?? ''}"></label>`,
+    [{ label: 'Batal', value: null }, { label: 'Simpan', cls: 'pri', get: d => { const j = d.querySelector('#bj').value.trim().toUpperCase(); if (!j) return false; return { judul: j, pesanan: d.querySelector('#bp').value === '' ? null : +d.querySelector('#bp').value }; } }]);
   if (!r) return;
   try {
     if (id) { await api(`spbt_buku?id=eq.${id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: r }); Object.assign(b, r); }
@@ -417,12 +417,12 @@ async function editBuku(id) {
   } catch (e) { toast('Gagal: ' + esc(e.message), 'er'); }
 }
 async function importBuku() {
-  const r = await modal(`Tampal senarai buku Tahun ${tBuku}`, `<div class="sub">Satu judul setiap baris: <b>KOD</b> kemudian tab (atau koma/titik bertindih |) kemudian <b>JUDUL</b>. Boleh salin terus dari Excel.</div><textarea id="im" rows="10" placeholder="BT011123&#9;BAHASA MELAYU TAHUN 1 SK (BT)"></textarea>`,
+  const r = await modal(`Tampal senarai buku Tahun ${tBuku}`, `<div class="sub">Satu judul buku setiap baris. Boleh salin terus dari Excel.</div><textarea id="im" rows="10" placeholder="BAHASA MELAYU TAHUN 1 SK (BT)"></textarea>`,
     [{ label: 'Batal', value: null }, { label: 'Import', cls: 'pri', get: d => d.querySelector('#im').value }]);
   if (!r) return;
   let n = Math.max(0, ...S.buku.map(x => x.susunan)); const rows = [];
-  r.split(/\r?\n/).forEach(l => { const p = l.split(/\t|\||;|,(?=\s*[A-Za-z])/); if (p.length < 2) return; const kod = p[0].trim().toUpperCase(), j = p.slice(1).join(' ').trim().toUpperCase(); if (kod && j && !S.buku.some(b => b.tahun === tBuku && b.kod === kod)) rows.push({ id: uid(), tahun: tBuku, kod, judul: j, susunan: ++n }); });
-  if (!rows.length) return toast('Tiada baris sah / semua kod sudah wujud', 'wn');
+  r.split(/\r?\n/).forEach(l => { const j = l.trim().replace(/\s+/g, ' ').toUpperCase(); if (j && !S.buku.some(b => b.tahun === tBuku && b.judul === j) && !rows.some(x => x.judul === j)) { const id = uid(); rows.push({ id, tahun: tBuku, kod: id.slice(0, 8).toUpperCase(), judul: j, susunan: ++n }); } });
+  if (!rows.length) return toast('Tiada baris sah / semua judul sudah wujud', 'wn');
   try { await api('spbt_buku', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: rows }); S.buku.push(...rows); S.buku.sort((a, c) => a.tahun - c.tahun || a.susunan - c.susunan); toast(`${rows.length} judul ditambah. Pilih judul ini pada kelas melalui “Pilih judul buku”.`, 'ok', 6000); renderTetapan(); } catch (e) { toast('Gagal: ' + esc(e.message), 'er'); }
 }
 
