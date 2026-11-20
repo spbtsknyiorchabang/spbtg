@@ -209,7 +209,7 @@ function renderClass() {
   <label class="f">Tarikh pengagihan (lalai tarikh murid menerima)<input type="date" id="tg" value="${k.tarikh_agih || ''}"></label></div>
   <div id="warnBox"></div>
   <div class="legend"><span><b style="background:var(--ok2);color:var(--ok)">✓</b>Sudah terima (klik sekali)</span><span><b style="background:var(--bg2);color:var(--mu)">–</b>Tidak terlibat (klik kali kedua)</span><span><b style="border:1px solid var(--bd)"></b>Belum terima (klik kali ketiga)</span><span>Klik tajuk buku untuk tindakan seluruh lajur · Pemulangan buku diabaikan untuk pengagihan awal tahun</span></div>
-  <div class="tw card" id="tw"></div>`;
+  <div class="tabs" id="tabs"></div><div id="vw"></div>`;
   $('#main').innerHTML = h;
   renderTable(); renderWarn();
   $('#btnBack').onclick = () => go('home'); $('#btnSave').onclick = saveClass; $('#btnPrint').onclick = printClass;
@@ -234,7 +234,7 @@ function renderWarn() {
   else box.innerHTML = `<div class="warn ok">✓ Semua murid telah menerima buku lengkap.</div>`;
   const a = $('#lnkLst'); if (a) a.onclick = e => { e.preventDefault(); W.showMiss = !W.showMiss; renderWarn(); };
 }
-function renderTable() {
+function renderMatrix() {
   const st = stats(W.kelas, W.murid, W.terima), ids = st.ids, missSet = new Set(st.miss.map(x => x.m.id));
   let h = `<table class="t"><thead><tr><th class="no">No</th><th class="nm">Nama murid</th><th class="dt">Tarikh terima</th>${ids.map(id => { const b = bukuBy(id); return `<th class="bk" data-col="${id}" title="${esc(b.judul)}"><div class="vt">${esc(b.judul)}</div></th>`; }).join('')}<th>Jum.</th><th></th></tr></thead><tbody>`;
   W.murid.forEach((m, i) => {
@@ -246,10 +246,60 @@ function renderTable() {
   h += `</tbody><tfoot><tr><td class="lb" colspan="3">Terima</td>${st.per.map(p => `<td>${p.terima}</td>`).join('')}<td>${st.per.reduce((a, p) => a + p.terima, 0)}</td><td></td></tr>
   <tr><td class="lb" colspan="3">Kurang</td>${st.per.map(p => `<td class="${p.kurang ? 'neg' : ''}">${p.kurang}</td>`).join('')}<td class="${st.kurang ? 'neg' : ''}">${st.kurang}</td><td></td></tr></tfoot></table>`;
   if (!W.murid.length) h = `<div style="padding:40px;text-align:center" class="sub">Belum ada murid dalam kelas ini. Klik <b>+ Tambah murid</b>.</div>`;
-  const tw = $('#tw'), sl = tw.scrollLeft, stp = tw.scrollTop; tw.innerHTML = h; tw.scrollLeft = sl; tw.scrollTop = stp;
+  const old = $('#tw'), sl = old ? old.scrollLeft : 0, stp = old ? old.scrollTop : 0; $('#vw').innerHTML = `<div class="tw card" id="tw">${h}</div>`; const tw = $('#tw'); tw.scrollLeft = sl; tw.scrollTop = stp;
+}
+function cellOf(mid, bid) { return W.terima.get(k2(mid, bid)) || ''; }
+function setCell(mid, bid, v) {
+  const key = k2(mid, bid), m = W.murid.find(x => x.id === mid);
+  if (v) { W.terima.set(key, v); if (v === 'T' && !m.tarikh_terima) m.tarikh_terima = W.kelas.tarikh_agih || today(); } else W.terima.delete(key);
+  setDirty(true);
+}
+function rowHtml(attr, label, no, s, extra) {
+  return `<div class="trow ${s === 'T' ? 'on' : s === 'X' ? 'na' : ''}" ${attr}>${no ? `<span class="no">${no}</span>` : ''}<span class="nm">${label}</span><span class="box">${s === 'T' ? '✓' : s === 'X' ? '–' : ''}</span><button class="xb" ${extra}>${s === 'X' ? 'Buang tanda' : 'Tidak terlibat'}</button></div>`;
+}
+function renderTabs() {
+  const tb = [['buku', 'Ikut buku'], ['murid', 'Ikut murid'], ['jadual', 'Jadual']];
+  $('#tabs').innerHTML = tb.map(([k, l]) => `<button data-tab="${k}" class="${W.tab === k ? 'on' : ''}">${l}</button>`).join('');
+}
+function renderByBook() {
+  const ids = (W.kelas.buku_ids || []).filter(bukuBy); if (!ids.length) { $('#vw').innerHTML = '<div class="card sub" style="padding:30px;text-align:center">Judul buku belum dipilih. Klik <b>Pilih judul buku</b>.</div>'; return; }
+  if (!ids.includes(W.book)) W.book = ids[0];
+  const cnt = id => W.murid.filter(m => cellOf(m.id, id) === 'T').length, N = W.murid.length;
+  let h = `<div class="chips">${ids.map(id => `<button class="chip ${id === W.book ? 'on' : ''}" data-chip="${id}">${esc(bukuBy(id).judul)}<small>${cnt(id)}</small></button>`).join('')}</div>
+  <div class="tbar"><span class="cnt"><b>${cnt(W.book)}</b> / ${N} murid menerima</span><span class="sp"></span><button class="btn sm" data-bulk="T">Tanda semua</button><button class="btn sm" data-bulk="">Kosongkan</button></div>`;
+  if (!N) h += '<div class="card sub" style="padding:30px;text-align:center">Belum ada murid. Klik <b>+ Tambah murid</b>.</div>';
+  W.murid.forEach((m, i) => { h += rowHtml(`data-tap="${m.id}:${W.book}"`, esc(m.nama), i + 1, cellOf(m.id, W.book), `data-xna="${m.id}:${W.book}"`); });
+  const ch = $('#vw .chips'), sl = ch ? ch.scrollLeft : 0; $('#vw').innerHTML = h; const c2 = $('#vw .chips'); if (c2) { c2.scrollLeft = sl; const on = c2.querySelector('.chip.on'); if (on && (on.offsetLeft < c2.scrollLeft || on.offsetLeft + on.offsetWidth > c2.scrollLeft + c2.clientWidth)) c2.scrollLeft = on.offsetLeft - 12; }
+}
+function renderByStudent() {
+  const ids = (W.kelas.buku_ids || []).filter(bukuBy); let h = '';
+  if (!W.murid.length) h = '<div class="card sub" style="padding:30px;text-align:center">Belum ada murid. Klik <b>+ Tambah murid</b>.</div>';
+  W.murid.forEach((m, i) => {
+    const n = ids.filter(id => cellOf(m.id, id) === 'T').length, open = W.open === m.id;
+    h += `<div class="scard ${open ? 'open' : ''}"><div class="shd" data-open="${m.id}"><span class="no">${i + 1}</span><span class="nm">${esc(m.nama)}</span><span class="pill ${n === ids.length && ids.length ? 'full' : ''}">${n}/${ids.length}</span></div>`;
+    if (open) {
+      h += `<div class="sbd"><div class="tbar"><label class="f" style="margin:0">Tarikh terima<input type="date" data-dt="${m.id}" value="${m.tarikh_terima || ''}"></label><span class="sp"></span><button class="btn sm" data-sall="${m.id}:T">Tanda semua</button><button class="btn sm" data-sall="${m.id}:">Kosongkan</button><button class="btn sm" data-ed="${m.id}">Sunting</button><button class="btn sm" data-del="${m.id}">Buang</button></div>`;
+      ids.forEach(id => { h += rowHtml(`data-tap="${m.id}:${id}"`, esc(bukuBy(id).judul), 0, cellOf(m.id, id), `data-xna="${m.id}:${id}"`); });
+      h += '</div>';
+    }
+    h += '</div>';
+  });
+  $('#vw').innerHTML = h;
+}
+function renderTable() {
+  if (!$('#vw')) return;
+  W.tab = W.tab || 'buku'; renderTabs(); const lg = document.querySelector('.legend'); if (lg) lg.hidden = W.tab !== 'jadual';
+  if (W.tab === 'buku') renderByBook(); else if (W.tab === 'murid') renderByStudent(); else renderMatrix();
 }
 $('#main').addEventListener('click', async e => {
   if (view !== 'kelas' || !W) return;
+  const tb = e.target.closest('[data-tab]'); if (tb) { W.tab = tb.dataset.tab; renderTable(); return; }
+  const chip = e.target.closest('[data-chip]'); if (chip) { W.book = chip.dataset.chip; renderTable(); return; }
+  const bulk = e.target.closest('[data-bulk]'); if (bulk) { W.murid.forEach(m => setCell(m.id, W.book, bulk.dataset.bulk)); renderTable(); renderWarn(); return; }
+  const sall = e.target.closest('[data-sall]'); if (sall) { const [mid, v] = sall.dataset.sall.split(':'); (W.kelas.buku_ids || []).filter(bukuBy).forEach(b => setCell(mid, b, v)); renderTable(); renderWarn(); return; }
+  const xna = e.target.closest('[data-xna]'); if (xna) { const [mid, bid] = xna.dataset.xna.split(':'); setCell(mid, bid, cellOf(mid, bid) === 'X' ? '' : 'X'); renderTable(); renderWarn(); return; }
+  const tap = e.target.closest('[data-tap]'); if (tap) { const [mid, bid] = tap.dataset.tap.split(':'); setCell(mid, bid, cellOf(mid, bid) === 'T' ? '' : 'T'); renderTable(); renderWarn(); return; }
+  const op = e.target.closest('[data-open]'); if (op) { W.open = W.open === op.dataset.open ? null : op.dataset.open; renderTable(); return; }
   const c = e.target.closest('td.c');
   if (c) {
     const key = k2(c.dataset.m, c.dataset.b), s = W.terima.get(key);
