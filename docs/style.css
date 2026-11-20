@@ -175,3 +175,8 @@ table.frm .vt span{writing-mode:vertical-rl;transform:rotate(180deg);text-align:
 .shd .no{width:26px;text-align:right;color:var(--mu);font-size:13px}.shd .nm{flex:1;font-weight:600}
 .pill{background:var(--bg2);color:var(--mu);border-radius:99px;padding:3px 12px;font:600 13px inherit;font-family:inherit}.pill.full{background:var(--ok2);color:var(--ok)}
 .sbd{padding:4px 14px 14px;border-top:1px solid var(--bd)}
+
+.chips .chip.on{background:var(--tx);color:var(--bg);border-color:var(--tx);box-shadow:0 0 0 3px var(--ac2);font-weight:800}
+.chips .chip.on::before{content:'●';font-size:10px;color:var(--bg)}
+.chips .chip.on small{background:var(--bg);color:var(--tx)}
+.legend[hidden]{display:none!important}

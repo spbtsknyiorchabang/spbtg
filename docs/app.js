@@ -204,7 +204,7 @@ function renderClass() {
   let h = `<div class="hd"><div><button class="btn sm" id="btnBack">← Semua kelas</button></div><div class="spacer"></div>
   <span class="chip dirty" id="dirtyChip" hidden>● Belum disimpan</span>
   <button class="btn" id="btnTitles">Pilih judul buku</button><button class="btn" id="btnAdd">+ Tambah murid</button><button class="btn" id="btnPrint">🖨 Cetak</button><button class="btn" id="btnSave">💾 Simpan</button></div>
-  <h1>${esc(k.nama)} <button class="ib" id="btnRen" title="Tukar nama kelas">✎</button></h1><div class="sub">Tahun ${k.tahun} · ${W.murid.length} murid</div>
+  <h1>${esc(k.nama)} <button class="ib" id="btnRen" title="Tukar nama kelas">✎</button></h1><div class="sub">Tahun ${k.tahun} · ${W.murid.length} murid · ${(k.buku_ids || []).filter(bukuBy).length} judul buku</div>
   <div class="card meta" style="margin-top:14px"><label class="f">Guru kelas${guruSelect('gk', k.guru_kelas)}</label><label class="f">Penolong guru kelas${guruSelect('gp', k.penolong)}</label>
   <label class="f">Tarikh pengagihan (lalai tarikh murid menerima)<input type="date" id="tg" value="${k.tarikh_agih || ''}"></label></div>
   <div id="warnBox"></div>
@@ -265,7 +265,7 @@ function renderByBook() {
   const ids = (W.kelas.buku_ids || []).filter(bukuBy); if (!ids.length) { $('#vw').innerHTML = '<div class="card sub" style="padding:30px;text-align:center">Judul buku belum dipilih. Klik <b>Pilih judul buku</b>.</div>'; return; }
   if (!ids.includes(W.book)) W.book = ids[0];
   const cnt = id => W.murid.filter(m => cellOf(m.id, id) === 'T').length, N = W.murid.length;
-  let h = `<div class="chips">${ids.map(id => `<button class="chip ${id === W.book ? 'on' : ''}" data-chip="${id}">${esc(bukuBy(id).judul)}<small>${cnt(id)}</small></button>`).join('')}</div>
+  let h = `<div class="sub" style="margin:0 2px 6px">${ids.length} judul buku · tekan satu untuk isi</div><div class="chips">${ids.map(id => `<button class="chip ${id === W.book ? 'on' : ''}" data-chip="${id}">${esc(bukuBy(id).judul)}<small>${cnt(id)}/${N}</small></button>`).join('')}</div>
   <div class="tbar"><span class="cnt"><b>${cnt(W.book)}</b> / ${N} murid menerima</span><span class="sp"></span><button class="btn sm" data-bulk="T">Tanda semua</button><button class="btn sm" data-bulk="">Kosongkan</button></div>`;
   if (!N) h += '<div class="card sub" style="padding:30px;text-align:center">Belum ada murid. Klik <b>+ Tambah murid</b>.</div>';
   W.murid.forEach((m, i) => { h += rowHtml(`data-tap="${m.id}:${W.book}"`, esc(m.nama), i + 1, cellOf(m.id, W.book), `data-xna="${m.id}:${W.book}"`); });
