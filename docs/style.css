@@ -148,3 +148,7 @@ table.frm .vt span{writing-mode:vertical-rl;transform:rotate(180deg);text-align:
   body.ps #printRoot{display:none}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+.bell{vertical-align:-3px;margin-right:4px;animation:ring 2.4s ease-in-out infinite;transform-origin:50% 0}
+@keyframes ring{0%,60%,100%{transform:rotate(0)}65%{transform:rotate(14deg)}75%{transform:rotate(-12deg)}85%{transform:rotate(8deg)}92%{transform:rotate(-5deg)}}
+@media(prefers-reduced-motion:reduce){.bell{animation:none}}

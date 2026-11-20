@@ -1,6 +1,7 @@
 (function () {
 'use strict';
 const CFG = window.SPBT_CONFIG;
+const BELL='<svg class="bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>';
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
@@ -151,7 +152,7 @@ function renderHome(playSound = true) {
     h += `<div class="tahun"><h2>Tahun ${t}</h2><div class="ln"></div><button class="btn sm" data-addk="${t}">+ Tambah kelas</button></div><div class="grid">`;
     ks.forEach(({ k, st, n }) => {
       const chip = !n ? `<span class="chip mu">Tiada murid</span>` : !st.ids.length ? `<span class="chip er">Judul buku belum dipilih</span>`
-        : st.miss.length ? `<span class="chip wn">⚠ ${st.miss.length} murid belum terima buku</span>` : `<span class="chip ok">✓ Semua murid lengkap</span>`;
+        : st.miss.length ? `<span class="chip wn">${BELL} ${st.miss.length} murid belum terima buku</span>` : `<span class="chip ok">✓ Semua murid lengkap</span>`;
       h += `<button class="card kc" data-k="${k.id}"><div class="nm">${esc(k.nama)}</div><div class="gu">${k.guru_kelas ? esc(k.guru_kelas) : 'Guru kelas belum dipilih'}</div>
       <div class="bar"><i style="width:${st.pct}%"></i></div><div class="meta"><span>${n} murid · ${st.ids.length} judul</span><span>${st.pct}%</span></div>${chip}</button>`;
     });
@@ -159,7 +160,7 @@ function renderHome(playSound = true) {
     h += `</div>`;
   }
   $('#main').innerHTML = h;
-  if (missM && playSound) { toast(`⚠ <b>${missM} murid</b> belum menerima buku lengkap`, 'wn'); Snd.chime(); }
+  if (missM && playSound) { toast(`${BELL} <b>${missM} murid</b> belum menerima buku lengkap`, 'wn'); Snd.chime(); }
 }
 $('#main').addEventListener('click', e => {
   const k = e.target.closest('[data-k]'); if (k && view === 'home') return go('kelas', k.dataset.k);
@@ -228,7 +229,7 @@ function renderWarn() {
   const st = stats(W.kelas, W.murid, W.terima), box = $('#warnBox'); if (!box) return;
   if (!W.murid.length) box.innerHTML = '';
   else if (!st.ids.length) box.innerHTML = `<div class="warn">Judul buku belum dipilih untuk kelas ini. Klik <b>Pilih judul buku</b>.</div>`;
-  else if (st.miss.length) box.innerHTML = `<div class="warn" role="alert"><b>⚠ ${st.miss.length} murid belum menerima semua buku.</b> <a href="#" id="lnkLst" style="color:var(--ac);font-weight:600">${W.showMiss ? 'Sembunyi senarai' : 'Lihat senarai'}</a>
+  else if (st.miss.length) box.innerHTML = `<div class="warn" role="alert"><b>${BELL} ${st.miss.length} murid belum menerima semua buku.</b> <a href="#" id="lnkLst" style="color:var(--ac);font-weight:600">${W.showMiss ? 'Sembunyi senarai' : 'Lihat senarai'}</a>
     ${W.showMiss ? `<div class="lst">${st.miss.map(x => `<span>${esc(x.m.nama)} · kurang ${x.n}</span>`).join('')}</div>` : ''}</div>`;
   else box.innerHTML = `<div class="warn ok">✓ Semua murid telah menerima buku lengkap.</div>`;
   const a = $('#lnkLst'); if (a) a.onclick = e => { e.preventDefault(); W.showMiss = !W.showMiss; renderWarn(); };
@@ -323,7 +324,7 @@ async function saveClass() {
     terima.forEach(t => S.terima.set(k2(t.m, t.b), t.s));
     setDirty(false);
     const st = stats(W.kelas, W.murid, W.terima);
-    if (st.miss.length) { toast(`Disimpan. ⚠ <b>${st.miss.length} murid</b> masih belum menerima buku lengkap.`, 'wn', 6000); Snd.chime(); } else toast('Disimpan. Semua murid lengkap ✓', 'ok');
+    if (st.miss.length) { toast(`Disimpan. ${BELL} <b>${st.miss.length} murid</b> masih belum menerima buku lengkap.`, 'wn', 6000); Snd.chime(); } else toast('Disimpan. Semua murid lengkap ✓', 'ok');
   } catch (e) { toast('Gagal menyimpan: ' + esc(e.message), 'er', 8000); }
   btn.disabled = false; btn.textContent = '💾 Simpan';
 }
