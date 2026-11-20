@@ -180,3 +180,4 @@ table.frm .vt span{writing-mode:vertical-rl;transform:rotate(180deg);text-align:
 .chips .chip.on::before{content:'●';font-size:10px;color:var(--bg)}
 .chips .chip.on small{background:var(--bg);color:var(--tx)}
 .legend[hidden]{display:none!important}
+[hidden]{display:none!important}
