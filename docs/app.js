@@ -242,7 +242,7 @@ function renderMatrix() {
     let n = 0; const cells = ids.map(id => { const s = W.terima.get(k2(m.id, id)); if (s === 'T') n++; return `<td class="c ${s === 'T' ? 't' : s === 'X' ? 'x' : ''}" data-m="${m.id}" data-b="${id}">${s === 'T' ? '✓' : s === 'X' ? '✗' : ''}</td>`; }).join('');
     h += `<tr data-row="${m.id}" class="${missSet.has(m.id) ? 'miss' : ''}"><td class="no">${i + 1}</td><td class="nm">${esc(m.nama)}<small>${esc(m.jantina)}${m.nota ? ' · ' + esc(m.nota) : ''}</small></td>
     <td class="dt"><input type="date" data-dt="${m.id}" value="${m.tarikh_terima || ''}"></td>${cells}<td class="jm">${n}</td>
-    <td class="ac"><button class="ib" data-all="${m.id}" title="Tandakan semua buku diterima">✓ semua</button><button class="ib" data-ed="${m.id}" title="Sunting">✎</button><button class="ib" data-del="${m.id}" title="Buang murid">🗑</button></td></tr>`;
+    <td class="ac"><button class="ib" data-all="${m.id}" title="Tandakan semua buku diterima">✓ semua</button><button class="ib" data-ed="${m.id}" title="Sunting">✎</button><button class="ib" data-del="${m.id}" title="Murid telah berpindah">🗑</button></td></tr>`;
   });
   h += `</tbody><tfoot><tr><td class="lb" colspan="3">Terima</td>${st.per.map(p => `<td>${p.terima}</td>`).join('')}<td>${st.per.reduce((a, p) => a + p.terima, 0)}</td><td></td></tr>
   <tr><td class="lb" colspan="3">Kurang</td>${st.per.map(p => `<td class="${p.kurang ? 'neg' : ''}">${p.kurang}</td>`).join('')}<td class="${st.kurang ? 'neg' : ''}">${st.kurang}</td><td></td></tr></tfoot></table>`;
@@ -279,7 +279,7 @@ function renderByStudent() {
     const n = ids.filter(id => cellOf(m.id, id) === 'T').length, open = W.open === m.id;
     h += `<div class="scard ${open ? 'open' : ''}"><div class="shd" data-open="${m.id}"><span class="no">${i + 1}</span><span class="nm">${esc(m.nama)}</span><span class="pill ${n === ids.length && ids.length ? 'full' : ''}">${n}/${ids.length}</span></div>`;
     if (open) {
-      h += `<div class="sbd"><div class="tbar"><label class="f" style="margin:0">Tarikh terima<input type="date" data-dt="${m.id}" value="${m.tarikh_terima || ''}"></label><span class="sp"></span><button class="btn sm" data-sall="${m.id}:T">Tanda semua</button><button class="btn sm" data-sall="${m.id}:">Kosongkan</button><button class="btn sm" data-ed="${m.id}">Sunting</button><button class="btn sm" data-del="${m.id}">Buang</button></div>`;
+      h += `<div class="sbd"><div class="tbar"><label class="f" style="margin:0">Tarikh terima<input type="date" data-dt="${m.id}" value="${m.tarikh_terima || ''}"></label><span class="sp"></span><button class="btn sm" data-sall="${m.id}:T">Tanda semua</button><button class="btn sm" data-sall="${m.id}:">Kosongkan</button><button class="btn sm" data-ed="${m.id}">Sunting</button><button class="btn sm" data-del="${m.id}">Murid telah berpindah</button></div>`;
       ids.forEach(id => { h += rowHtml(`data-tap="${m.id}:${id}"`, esc(bukuBy(id).judul), 0, cellOf(m.id, id), `data-xna="${m.id}:${id}"`); });
       h += '</div>';
     }
@@ -313,7 +313,7 @@ $('#main').addEventListener('click', async e => {
   const ed = e.target.closest('[data-ed]'); if (ed) return editMurid(ed.dataset.ed);
   const de = e.target.closest('[data-del]'); if (de) {
     const m = W.murid.find(x => x.id === de.dataset.del);
-    if (await confirmBox('Buang murid', `Buang <b>${esc(m.nama)}</b> daripada kelas ini? Tindakan ini berkuat kuasa selepas anda tekan Simpan.`, 'Buang', true)) { W.murid = W.murid.filter(x => x !== m); S.buku.forEach(b => W.terima.delete(k2(m.id, b.id))); setDirty(true); renderTable(); renderWarn(); }
+    if (await confirmBox('Murid telah berpindah', `Tandakan <b>${esc(m.nama)}</b> telah berpindah dan keluarkan daripada senarai kelas ini?`, 'Murid telah berpindah', true)) { W.murid = W.murid.filter(x => x !== m); S.buku.forEach(b => W.terima.delete(k2(m.id, b.id))); setDirty(true); renderTable(); renderWarn(); }
   }
 });
 $('#main').addEventListener('change', e => { const d = e.target.closest('[data-dt]'); if (d && W) { W.murid.find(x => x.id === d.dataset.dt).tarikh_terima = d.value || null; setDirty(true); } });
