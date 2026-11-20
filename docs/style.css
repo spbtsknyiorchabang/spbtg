@@ -181,3 +181,5 @@ table.frm .vt span{writing-mode:vertical-rl;transform:rotate(180deg);text-align:
 .chips .chip.on small{background:var(--bg);color:var(--tx)}
 .legend[hidden]{display:none!important}
 [hidden]{display:none!important}
+.pgi,.pgi *,table.frm,table.frm *{color:#000!important;opacity:1!important;text-shadow:none!important}
+table.frm .vt,table.frm .vt span{color:#000!important}
