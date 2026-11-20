@@ -41,7 +41,7 @@
       if (o && o.html !== undefined) inner = o.html; else if (val !== undefined) inner = esc(val).replace(/\n/g, '<br>');
       let cls = '';
       if (al.rot === 90 && inner) {
-        inner = `<div class="vt" style="width:${wpx}px;height:${hh}px"><span style="font-size:${(o && o.fz) || f.z}pt">${inner}</span></div>`;
+        inner = `<div class="vt" style="width:${wpx}px;height:${hh}px"><span style="font-size:${(o && o.fz) || f.z}pt${o && o.same ? ';font-family:Arial,Helvetica,sans-serif;font-weight:400;font-style:normal;-webkit-text-stroke:0' : ''}">${inner}</span></div>`;
         cls = 'rot';
       } else if (!al.w && cs === 1 && inner) { cls = 'ov'; }
       else if (!al.w && inner && (c.v || (o && o.text)) && String(val).length * f.z * 0.55 > wpx) { cls = 'ov'; }
@@ -80,7 +80,7 @@
         }
         // tajuk judul buku
         const fz = 6.5;
-        chunk.forEach((b, j) => { ov[colL(3 + j) + L.head] = { text: b.judul, fz }; });
+        chunk.forEach((b, j) => { ov[colL(3 + j) + L.head] = { text: b.judul, fz: 8, same: true }; });
         const rows = ctx.murid.slice(p * 10, p * 10 + 10);
         const tot = new Array(chunk.length).fill(0); let totAll = 0;
         rows.forEach((m, k) => {
